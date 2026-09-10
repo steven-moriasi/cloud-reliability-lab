@@ -12,7 +12,7 @@ services:
       timeout: 3s
       retries: 10
     ports:
-      - "${RELIABILITY_LAB_POSTGRES_PORT:-5434}:5432"
+      - "127.0.0.1:${RELIABILITY_LAB_POSTGRES_PORT:-5434}:5432"
     volumes:
       - reliability-data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro
@@ -27,13 +27,13 @@ services:
       timeout: 3s
       retries: 10
     ports:
-      - "${RELIABILITY_LAB_REDIS_PORT:-6381}:6379"
+      - "127.0.0.1:${RELIABILITY_LAB_REDIS_PORT:-6381}:6379"
 
   toxiproxy:
     image: ghcr.io/shopify/toxiproxy:2.12.0
     restart: unless-stopped
     ports:
-      - "${RELIABILITY_LAB_TOXIPROXY_PORT:-8474}:8474"
+      - "127.0.0.1:${RELIABILITY_LAB_TOXIPROXY_PORT:-8474}:8474"
 
   proxy-config:
     build: .
@@ -67,7 +67,7 @@ services:
       proxy-config:
         condition: service_completed_successfully
     ports:
-      - "${RELIABILITY_LAB_API_PORT:-8003}:8000"
+      - "127.0.0.1:${RELIABILITY_LAB_API_PORT:-8003}:8000"
 
   remediation:
     build: .
@@ -97,7 +97,7 @@ services:
       start_period: 10s
       retries: 3
     ports:
-      - "${RELIABILITY_LAB_REMEDIATION_METRICS_PORT:-9103}:9100"
+      - "127.0.0.1:${RELIABILITY_LAB_REMEDIATION_METRICS_PORT:-9103}:9100"
 
   tools:
     build: .
