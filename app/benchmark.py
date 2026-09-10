@@ -118,16 +118,16 @@ def prepare_data(connection: psycopg.Connection[tuple[object, ...]], rows: int) 
         """
         INSERT INTO orders (tenant_id, status, created_at, total_cents)
         SELECT
-            (series % 200) + 1,
+            (series %% 200) + 1,
             CASE
-                WHEN series % 10 < 7 THEN 'completed'
-                WHEN series % 10 < 9 THEN 'pending'
+                WHEN series %% 10 < 7 THEN 'completed'
+                WHEN series %% 10 < 9 THEN 'pending'
                 ELSE 'failed'
             END,
             now()
-                - ((series % 365) * interval '1 day')
-                - ((series % 86400) * interval '1 second'),
-            (series * 37) % 50000
+                - ((series %% 365) * interval '1 day')
+                - ((series %% 86400) * interval '1 second'),
+            (series * 37) %% 50000
         FROM generate_series(1, %s) AS series
         """,
         (rows,),

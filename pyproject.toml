@@ -12,6 +12,7 @@ license = { text = "MIT" }
 authors = [{ name = "Steven Ongati", email = "ongatisteven@gmail.com" }]
 dependencies = [
   "fastapi==0.115.12",
+  "httpx==0.28.1",
   "prometheus-client==0.22.1",
   "psycopg[binary,pool]==3.2.9",
   "pydantic-settings==2.9.1",
@@ -22,7 +23,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "httpx==0.28.1",
   "mypy==1.16.0",
   "pytest==8.4.0",
   "pytest-cov==6.1.1",

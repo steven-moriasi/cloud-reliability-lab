@@ -16,6 +16,7 @@ class Settings(BaseSettings):
         "postgresql://reliability:local-development-only@localhost:5434/reliability"
     )
     cache_url: str = "redis://localhost:6381/0"
+    toxiproxy_url: str = "http://localhost:8474"
     pool_min_size: int = Field(default=2, ge=1, le=50)
     pool_max_size: int = Field(default=10, ge=1, le=100)
     pool_timeout_seconds: float = Field(default=2, ge=0.1, le=30)

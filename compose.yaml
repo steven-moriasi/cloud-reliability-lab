@@ -1,0 +1,112 @@
+services:
+  db:
+    image: postgres:17.5-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: reliability
+      POSTGRES_USER: reliability
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-development-only}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reliability -d reliability"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "${RELIABILITY_LAB_POSTGRES_PORT:-5434}:5432"
+    volumes:
+      - reliability-data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+
+  cache:
+    image: redis:8.0.2-bookworm
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "${RELIABILITY_LAB_REDIS_PORT:-6381}:6379"
+
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.12.0
+    restart: unless-stopped
+    ports:
+      - "${RELIABILITY_LAB_TOXIPROXY_PORT:-8474}:8474"
+
+  proxy-config:
+    build: .
+    command: ["python", "-m", "app.proxy_setup"]
+    environment:
+      RELIABILITY_LAB_TOXIPROXY_URL: http://toxiproxy:8474
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+      toxiproxy:
+        condition: service_started
+
+  api:
+    build: .
+    restart: unless-stopped
+    environment: &api-environment
+      RELIABILITY_LAB_DATABASE_URL: postgresql://reliability:${POSTGRES_PASSWORD:-local-development-only}@toxiproxy:15432/reliability
+      RELIABILITY_LAB_CACHE_URL: redis://toxiproxy:16379/0
+      RELIABILITY_LAB_TOXIPROXY_URL: http://toxiproxy:8474
+      RELIABILITY_LAB_POOL_MIN_SIZE: ${RELIABILITY_LAB_POOL_MIN_SIZE:-2}
+      RELIABILITY_LAB_POOL_MAX_SIZE: ${RELIABILITY_LAB_POOL_MAX_SIZE:-10}
+      RELIABILITY_LAB_POOL_TIMEOUT_SECONDS: ${RELIABILITY_LAB_POOL_TIMEOUT_SECONDS:-2}
+      RELIABILITY_LAB_QUERY_TIMEOUT_MS: ${RELIABILITY_LAB_QUERY_TIMEOUT_MS:-2000}
+      RELIABILITY_LAB_CACHE_TTL_SECONDS: ${RELIABILITY_LAB_CACHE_TTL_SECONDS:-30}
+      RELIABILITY_LAB_STALE_IF_ERROR_SECONDS: ${RELIABILITY_LAB_STALE_IF_ERROR_SECONDS:-300}
+      RELIABILITY_LAB_CACHE_FAILURE_THRESHOLD: ${RELIABILITY_LAB_CACHE_FAILURE_THRESHOLD:-3}
+      RELIABILITY_LAB_CACHE_RECOVERY_SECONDS: ${RELIABILITY_LAB_CACHE_RECOVERY_SECONDS:-10}
+    depends_on:
+      proxy-config:
+        condition: service_completed_successfully
+    ports:
+      - "${RELIABILITY_LAB_API_PORT:-8003}:8000"
+
+  remediation:
+    build: .
+    restart: unless-stopped
+    command: ["python", "-m", "app.remediation"]
+    environment:
+      RELIABILITY_LAB_DATABASE_URL: postgresql://reliability:${POSTGRES_PASSWORD:-local-development-only}@db:5432/reliability
+      RELIABILITY_LAB_POOL_TIMEOUT_SECONDS: ${RELIABILITY_LAB_POOL_TIMEOUT_SECONDS:-2}
+      RELIABILITY_LAB_QUERY_TIMEOUT_MS: ${RELIABILITY_LAB_QUERY_TIMEOUT_MS:-2000}
+      RELIABILITY_LAB_IDLE_TRANSACTION_SECONDS: ${RELIABILITY_LAB_IDLE_TRANSACTION_SECONDS:-30}
+      RELIABILITY_LAB_REMEDIATION_MAX_TERMINATIONS: ${RELIABILITY_LAB_REMEDIATION_MAX_TERMINATIONS:-2}
+      RELIABILITY_LAB_REMEDIATION_INTERVAL_SECONDS: ${RELIABILITY_LAB_REMEDIATION_INTERVAL_SECONDS:-5}
+      RELIABILITY_LAB_FAULT_APPLICATION_PREFIX: ${RELIABILITY_LAB_FAULT_APPLICATION_PREFIX:-reliability-lab-fault-}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9100/metrics', timeout=2)",
+        ]
+      interval: 10s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    ports:
+      - "${RELIABILITY_LAB_REMEDIATION_METRICS_PORT:-9103}:9100"
+
+  tools:
+    build: .
+    profiles: ["tools"]
+    environment: *api-environment
+    depends_on:
+      proxy-config:
+        condition: service_completed_successfully
+    entrypoint: ["python"]
+
+volumes:
+  reliability-data:
