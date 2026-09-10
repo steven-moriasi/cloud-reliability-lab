@@ -116,7 +116,7 @@ class ExternalCache:
                 DEPENDENCY_AVAILABLE.labels(dependency="cache").set(1)
                 return None
             if not isinstance(value, str):
-                raise CacheUnavailableError("Cache returned an invalid value")
+                raise ValueError("Cache returned an invalid value")
             summary = CachedSummary.model_validate_json(value).to_domain()
         except (RedisError, ValueError) as error:
             self._breaker.record_failure()

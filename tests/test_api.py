@@ -3,10 +3,12 @@ from dataclasses import dataclass, field
 from fastapi.testclient import TestClient
 
 from app.api import get_order_service
+from app.core.config import Settings
 from app.domain.errors import DatabaseUnavailableError
 from app.domain.models import DataSource, OrderSummary
-from app.main import app
-from app.resilience import SummaryResult
+from app.infrastructure.database import Database
+from app.main import app, build_order_service, metrics
+from app.resilience import ResilientOrderService, SummaryResult
 
 
 @dataclass
@@ -96,3 +98,19 @@ def test_tenant_identifier_is_validated() -> None:
     response = client_for(FakeService()).get("/api/tenants/0/orders/summary")
 
     assert response.status_code == 422
+
+
+def test_runtime_composition_builds_bounded_adapters() -> None:
+    database, service = build_order_service(Settings())
+
+    assert isinstance(database, Database)
+    assert isinstance(service, ResilientOrderService)
+    database.close()
+
+
+def test_metrics_endpoint_uses_prometheus_content_type() -> None:
+    response = metrics()
+
+    assert response.media_type is not None
+    assert response.media_type.startswith("text/plain")
+    assert b"reliability_lab_summary_requests_total" in response.body
