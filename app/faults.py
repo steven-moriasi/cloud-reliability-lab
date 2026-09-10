@@ -20,7 +20,10 @@ def inject_idle_transaction(seconds: int) -> None:
                 f"Injected idle transaction {application_name}; "
                 f"waiting up to {seconds} seconds for remediation"
             )
-            time.sleep(seconds)
+            deadline = time.monotonic() + seconds
+            while time.monotonic() < deadline:
+                time.sleep(min(1, deadline - time.monotonic()))
+                connection.execute("SELECT 1").fetchone()
             connection.rollback()
     except psycopg.OperationalError:
         print(f"Fault session {application_name} was terminated by the remediation agent")
