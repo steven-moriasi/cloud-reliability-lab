@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cloud-reliability-lab"
+version = "0.1.0"
+description = "Reproducible database and service reliability experiments"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = { text = "MIT" }
+authors = [{ name = "Steven Ongati", email = "ongatisteven@gmail.com" }]
+dependencies = [
+  "fastapi==0.115.12",
+  "prometheus-client==0.22.1",
+  "psycopg[binary,pool]==3.2.9",
+  "pydantic-settings==2.9.1",
+  "redis==6.2.0",
+  "structlog==25.4.0",
+  "uvicorn[standard]==0.34.3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx==0.28.1",
+  "mypy==1.16.0",
+  "pytest==8.4.0",
+  "pytest-cov==6.1.1",
+  "ruff==0.11.13",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["redis.*"]
+ignore_missing_imports = true
