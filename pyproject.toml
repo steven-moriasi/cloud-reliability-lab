@@ -7,7 +7,7 @@ name = "cloud-reliability-lab"
 version = "0.1.0"
 description = "Reproducible database and service reliability experiments"
 readme = "README.md"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.11,<3.15"
 license = { text = "MIT" }
 authors = [{ name = "Steven Ongati", email = "ongatisteven@gmail.com" }]
 dependencies = [
