@@ -9,7 +9,7 @@ description = "Reproducible database and service reliability experiments"
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
 license = { text = "MIT" }
-authors = [{ name = "Steven Ongati", email = "ongatisteven@gmail.com" }]
+authors = [{ name = "Steven Moriasi", email = "moriasisteven@gmail.com" }]
 dependencies = [
   "fastapi==0.115.12",
   "httpx==0.28.1",

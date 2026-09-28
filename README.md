@@ -174,10 +174,25 @@ docker build .
 - [Failure model](docs/FAILURE_MODEL.md)
 - [Operations runbook](docs/OPERATIONS.md)
 - [AWS deployment mapping](docs/AWS_DEPLOYMENT.md)
-- [Portfolio evidence](docs/PORTFOLIO_EVIDENCE.md)
-- [Principal Engineer review](docs/PRINCIPAL_ENGINEER_REVIEW.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Architecture decisions](docs/adr/)
+
+## Reading order
+
+Start with this README, then review the architecture and failure model. Continue with the experiment
+catalog, resilience and remediation code, recovery scripts, tests, and roadmap.
+
+## Limits
+
+- No AWS resources were deployed.
+- The experiments do not use production traffic, production data distributions, concurrency, or
+  cold-storage benchmarks.
+- Multi-replica stale-cache consistency and PostgreSQL or Redis failover are not implemented or
+  exercised.
+- No formal RPO, RTO, load capacity, or availability target is validated.
+- Remediation ownership uses a lab-only application-name prefix rather than production-grade
+  authorization.
+- Local verification does not establish GitHub Actions status after publication.
 
 ## License
 

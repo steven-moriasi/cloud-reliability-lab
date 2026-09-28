@@ -9,7 +9,9 @@
 - exercise cache breaker recovery under concurrent half-open requests;
 - add PostgreSQL lock, statement-timeout, and connection-exhaustion experiments;
 - validate backup schema, representative values, indexes, and application smoke behavior;
-- measure restore duration and retain a machine-readable recovery report.
+- measure restore duration and retain a machine-readable recovery report;
+- make readiness capacity-aware under pool and dependency saturation;
+- verify point-in-time recovery and cross-version restores.
 
 ## Production architecture
 
@@ -19,7 +21,8 @@
 - implement application-level admission control and request coalescing;
 - replace process-local fallback with an approved stale-data design;
 - add cross-replica circuit and dependency-state considerations;
-- test managed-service failover and availability-zone impairment.
+- test managed-service failover and availability-zone impairment;
+- use workload identity and least-privilege authorization for remediation.
 
 ## Governance
 
